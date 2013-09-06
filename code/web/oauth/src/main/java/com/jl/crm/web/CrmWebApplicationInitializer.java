@@ -80,12 +80,18 @@ class OAuth2ServerConfiguration extends OAuth2ServerConfigurerAdapter {
 	private DataSource dataSource;
 
 	@Inject
+	private UserDetailsService userDetailsService;
+
+	@Inject
 	private ContentNegotiationStrategy contentNegotiationStrategy;
 
 	@Override
 	protected void registerAuthentication(AuthenticationManagerBuilder auth) throws Exception {
 
-		auth.apply(new InMemoryClientDetailsServiceConfigurer())
+		auth
+			.userDetailsService(userDetailsService)
+				.and()
+			.apply(new InMemoryClientDetailsServiceConfigurer())
 				.withClient("android-crm")
 				.resourceIds(applicationName)
 				.scopes("read", "write")
@@ -100,12 +106,12 @@ class OAuth2ServerConfiguration extends OAuth2ServerConfigurerAdapter {
 		http.requestMatcher(oauthRequestMatcher());
 
 		http.authorizeRequests()
-				  .anyRequest().authenticated();
+				.anyRequest().authenticated();
 
 		http.apply(new OAuth2ServerConfigurer())
 
-				  .tokenStore(new JdbcTokenStore(this.dataSource))
-				  .resourceId(applicationName);
+				.tokenStore(new JdbcTokenStore(this.dataSource))
+				.resourceId(applicationName);
 	}
 
 	@Bean
